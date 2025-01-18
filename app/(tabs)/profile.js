@@ -32,7 +32,7 @@ export default function App() {
         <Text style={styles.profileName}>DONWAHOUE Jesse</Text>
         <Text style={styles.profileEmail}>jessedowahoue8@gmail.com</Text>
       </View>
-
+      
       {/* Settings */}
       <TouchableOpacity  onPress={() => router.push('/parametres/parametre')} style={styles.optionContainer}>
         <Text style={styles.optionText}>Paramètre</Text>
