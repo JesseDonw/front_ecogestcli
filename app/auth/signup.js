@@ -5,8 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   Image,
-  ActivityIndicator,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import logo from '../../assets/logo.png';
@@ -18,6 +19,7 @@ import lock from '../../assets/lock.png';
 import { Colors } from '../../constants/Colors';
 import CustomError from '../../component/CustomError';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 export default function SignUp() {
   const router = useRouter();
@@ -104,39 +106,42 @@ export default function SignUp() {
   };
 
   const handleSignup = async () => {
+    if (!verifiedForm()) return;
     try {
-      if (verifiedForm()) {
-        setLoading(true);
-        const data = {
-          nom_client: nom?.trim(),
-          prenom_client: prenom?.trim(),
-          mail_client: email?.trim(),
-          mdp_client: password?.trim(),
-        };
-
-        console.log('data :>> ', data);
-
-        // Assurez-vous d'utiliser l'URL correcte pour l'API
-        const response = await axios.post('https://f8fe-197-234-223-210.ngrok-free.app/api/registercli', data);
-
-        console.log('client créé avec succès :>> ', response.data);
+      setLoading(true);
+      const data = {
+        nom_client: nom.trim(),
+        prenom_client: prenom.trim(),
+        mail_client: email.trim(),
+        mdp_client: password.trim(),
+      };
+  
+      const response = await axios.post(
+        'https://c63c-197-234-219-41.ngrok-free.app/api/registercli',
+        data
+      );
+  
+      if (response.data && response.data.client_id) {
+        // Stocker l'ID client dans AsyncStorage
+        await AsyncStorage.setItem('clientId', response.data.client_id.toString());
+  
+        // Vérifier que l'ID est bien stocké
+        const storedClientId = await AsyncStorage.getItem('clientId');
+        console.log('ID client stocké:', storedClientId);
+  
+        // Redirection vers la page de localisation
         router.replace('/auth/location');
+      } else {
+        Alert.alert('Erreur', 'ID client non trouvé');
       }
     } catch (error) {
-      console.log('Erreur :>> ', error.response ? error.response.data : error.message);
-      if (error.response && error.response.data.errors) {
-        // Gérez les erreurs spécifiques renvoyées par le back-end ici
-        setError({
-          nom: error.response.data.errors.nom_client || false,
-          prenom: error.response.data.errors.prenom_client || false,
-          email: error.response.data.errors.mail_client || false,
-          password: error.response.data.errors.mdp_client || false,
-        });
-      }
+      console.error('Erreur :', error.response?.data || error.message);
+      Alert.alert('Erreur', 'Problème avec l\'inscription. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>

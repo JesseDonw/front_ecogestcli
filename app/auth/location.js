@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Location from 'expo-location';
@@ -19,6 +20,25 @@ export default function SetLocation() {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState('');
   const [coordinates, setCoordinates] = useState(null);
+  const [clientId, setClientId] = useState(null);
+
+  useEffect(() => {
+    const fetchClientId = async () => {
+      try {
+        const storedClientId = await AsyncStorage.getItem('clientId');
+        if (storedClientId) {
+          setClientId(parseInt(storedClientId, 10));
+          console.log('ID client récupéré:', storedClientId);
+        } else {
+          console.warn("Client ID non trouvé dans le stockage.");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du client ID :", error);
+      }
+    };
+
+    fetchClientId();
+  }, []);
 
   const handleSetLocation = async () => {
     try {
@@ -57,16 +77,15 @@ export default function SetLocation() {
   };
 
   const handleSaveLocation = async () => {
-    if (!coordinates) {
-      Alert.alert('Erreur', 'Aucune localisation disponible à enregistrer');
+    if (!coordinates || !clientId) {
+      Alert.alert('Erreur', 'Aucune localisation disponible ou client ID non trouvé');
       return;
     }
 
     try {
       setLoading(true);
 
-      const response = await fetch('https://f8fe-197-234-223-210.ngrok-free.app/api/storelocation',
-       {
+      const response = await fetch('https://c63c-197-234-219-41.ngrok-free.app/api/storelocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,14 +95,14 @@ export default function SetLocation() {
           location: location,
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
-          client_id: 15, // Remplacez par l'ID client dynamique si disponible
+          client_id: clientId,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-       ('Succès', 'Localisation enregistrée avec succès !');
+        Alert.alert('Succès', 'Localisation enregistrée avec succès !');
         console.log(data);
         router.push('/auth/check'); // Redirection après le succès
       } else {
@@ -142,8 +161,6 @@ export default function SetLocation() {
   );
 }
 
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -179,7 +196,6 @@ const styles = StyleSheet.create({
   icon: {
     width: 60,
     height: 60,
-    
   },
   locationText: {
     fontFamily: "AbhayaLibreExtraBold",

@@ -1,25 +1,25 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView,Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import ordure from '../../assets/ordure.jpg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import ProfilCard from '../../component/ProfilCard';
+import { Colors } from '../../constants/Colors';
 
 const HomeScreen = () => {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+        <ProfilCard
+          welText="Bienvenue!"
+          userName='jesse DONWAHOUE'
+        />
+       
+      <ScrollView contentContainerStyle= {styles.ScrollViews} showsVerticalScrollIndicator = {false} >
         {/* Header Section */}
-        <View style={styles.headerSection}>
-          <View>
-            <Text style={styles.welcomeText}>Bienvenue !</Text>
-            <Text style={styles.userName}>John Doe</Text>
-          </View>
-          <TouchableOpacity onPress={() => router.push('/profile')}>
-            <Ionicons name="person-circle-outline" size={50} color="#000" />
-          </TouchableOpacity>
-        </View>
+      
 
         {/* Search Bar */}
         <View style={styles.searchBar}>
@@ -32,7 +32,10 @@ const HomeScreen = () => {
 
         {/* Banner Section */}
         <View style={styles.bannerContainer}>
-          <Ionicons name="image-outline" size={150} color="#AAA" />
+           <Image
+                    source={ordure}
+                    style={styles. ordures}
+                  />
         </View>
 
         {/* Information Cards */}
@@ -73,14 +76,21 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+
+    padding: 20,
     backgroundColor: '#F5F5F5',
   },
-  headerSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
+
+  ScrollViews:{
+  
+    alignItems:"center",
   },
+
+  ordures:{
+    resizeMode:"contain"
+  },
+
+ 
   welcomeText: {
     fontSize: 18,
     color: '#2E8B57',
@@ -114,15 +124,18 @@ const styles = StyleSheet.create({
     flex: 1,  // Ensures the search text takes up available space
   },
   bannerContainer: {
-    marginHorizontal: 20,
+    //marginHorizontal: 20,
     borderRadius: 10,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEE',
+    backgroundColor: Colors.gris_foncer,
+    aspectRatio:1/1,
+    width:350,
+    
   },
   infoSection: {
-    margin: 20,
+    margin: 10,
   },
   infoCard: {
     backgroundColor: '#FFF',
@@ -155,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   progressSection: {
-    margin: 20,
+    margin: 10,
     backgroundColor: '#FFF',
     padding: 20,
     borderRadius: 10,
@@ -163,6 +176,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
+    alignSelf:"stretch"
   },
   progressTitle: {
     fontSize: 18,

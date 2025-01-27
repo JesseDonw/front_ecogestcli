@@ -78,29 +78,28 @@ export default function Signin() {
                     mail_client: email?.trim(),
                     mdp_client: password?.trim(),
                 };
-                console.log('data :>> ', data);
-
-                // Envoi de la requête à l'API
-                const response = await axios.post('https://f8fe-197-234-223-210.ngrok-free.app/api/logincli', data);
-
-                console.log('connecté :>> ', response.data);
-
-                // Si la connexion est réussie, on sauvegarde le token
+    
+                console.log('Connexion en cours...');
+                const response = await axios.post('https://c63c-197-234-219-41.ngrok-free.app/api/logincli', data);
+    
                 if (response.data.token) {
-                    await AsyncStorage.setItem('userToken', response.data.token); // Stockage du token
-                    router.replace("/home");
+                    await AsyncStorage.setItem('userToken', response.data.token);
+                    await AsyncStorage.setItem('clientId', response.data.client_id.toString());
+    
+                    console.log('Connexion réussie');
+                    await router.replace("/home");
                 } else {
                     Alert.alert('Erreur', 'Token non trouvé');
                 }
             }
         } catch (error) {
-            console.log('error :>> ', error);
-            Alert.alert('Erreur', 'Identifiants incorrects ou problème avec le serveur');
+            console.error('Erreur :>> ', error.response ? error.response.data : error.message);
+            Alert.alert('Erreur', error.response?.data?.message || 'Identifiants incorrects ou problème avec le serveur');
         } finally {
             setLoading(false);
         }
     };
-
+    
     return (
         <View style={styles.container}>
             <Image
