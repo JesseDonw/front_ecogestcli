@@ -14,9 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.ecogestcli.app",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.ecogestcli.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo2.png",
         "backgroundColor": "#ffffff"

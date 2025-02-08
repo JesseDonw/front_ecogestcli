@@ -21,6 +21,7 @@ export default function SetLocation() {
   const [location, setLocation] = useState('');
   const [coordinates, setCoordinates] = useState(null);
   const [clientId, setClientId] = useState(null);
+ 
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -43,7 +44,7 @@ export default function SetLocation() {
   const handleSetLocation = async () => {
     try {
       setLoading(true);
-
+  
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -51,60 +52,68 @@ export default function SetLocation() {
           'Nous avons besoin de votre permission pour accéder à la localisation',
           [{ text: 'OK' }]
         );
+        setLoading(false);
         return;
       }
-
+  
       let currentLocation = await Location.getCurrentPositionAsync({});
       let geocode = await Location.reverseGeocodeAsync({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
       });
-
-      if (geocode[0]) {
-        const address = `${geocode[0].city || ''}, ${geocode[0].country || ''}`;
+  
+      if (geocode.length > 0) {
+        const city = geocode[0].city || geocode[0].region || 'Ville inconnue';
+        const country = geocode[0].country || 'Pays inconnu';
+        const address = `${city}, ${country}`; // ✅ Stocke seulement "Ville, Pays"
+  
         setLocation(address);
         setCoordinates({
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
         });
+  
+        console.log(`📍 Localisation détectée : ${address}`);
+      } else {
+        Alert.alert('Erreur', "Impossible de récupérer la localisation.");
       }
     } catch (error) {
-      Alert.alert('Erreur', "Impossible d'obtenir votre localisation");
+      Alert.alert('Erreur', "Impossible d'obtenir votre localisation.");
       console.error('Erreur de localisation:', error);
     } finally {
       setLoading(false);
     }
   };
-
+  
+  
   const handleSaveLocation = async () => {
     if (!coordinates || !clientId) {
       Alert.alert('Erreur', 'Aucune localisation disponible ou client ID non trouvé');
       return;
     }
-
+  
     try {
       setLoading(true);
-
-      const response = await fetch('https://c63c-197-234-219-41.ngrok-free.app/api/storelocation', {
+  
+      const response = await fetch('https://c112-41-79-219-65.ngrok-free.app/api/storelocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          location: location,
+          location: location, // ✅ Ex: "Cotonou, Bénin"
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           client_id: clientId,
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
-        Alert.alert('Succès', 'Localisation enregistrée avec succès !');
         console.log(data);
-        router.push('/auth/check'); // Redirection après le succès
+        router.push('/auth/check'); // ✅ Redirection après succès
       } else {
         Alert.alert('Erreur', data.message || 'Une erreur est survenue');
       }
@@ -115,24 +124,30 @@ export default function SetLocation() {
       setLoading(false);
     }
   };
-
+  
+  
+  
   return (
     <View style={styles.container}>
+      {/* Bouton de retour */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialCommunityIcons name="chevron-left" size={30} color="black" />
       </TouchableOpacity>
 
+      {/* Titre et description */}
       <Text style={styles.title}>Définissez votre localisation</Text>
       <Text style={styles.subtitle}>
         Ces données seront affichées dans le profil de votre compte pour des raisons de sécurité
       </Text>
 
+      {/* Affichage de la localisation */}
       <View style={[styles.locationBox, styles.shadow]}>
         <View style={styles.locationRow}>
           <Image source={mapsIcon} style={styles.icon} />
           <Text style={styles.locationText}>{location || 'Votre localisation'}</Text>
         </View>
 
+        {/* Bouton pour définir la localisation */}
         <TouchableOpacity
           style={styles.setLocationButton}
           onPress={handleSetLocation}
@@ -146,6 +161,8 @@ export default function SetLocation() {
         </TouchableOpacity>
       </View>
 
+    
+      {/* Bouton Enregistrer */}
       <TouchableOpacity
         style={[styles.nextButton, (!location || loading) && styles.nextButtonDisabled]}
         onPress={handleSaveLocation}
@@ -160,6 +177,7 @@ export default function SetLocation() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

@@ -35,7 +35,7 @@ export default function Signin() {
     };
 
     useEffect(() => {
-        if(email){
+        if (email) {
             setError((e) => ({
                 ...e,
                 email: false
@@ -44,7 +44,7 @@ export default function Signin() {
     }, [email]);
 
     useEffect(() => {
-        if(password){
+        if (password) {
             setError((e) => ({
                 ...e,
                 password: false
@@ -79,27 +79,42 @@ export default function Signin() {
                     mdp_client: password?.trim(),
                 };
     
-                console.log('Connexion en cours...');
-                const response = await axios.post('https://c63c-197-234-219-41.ngrok-free.app/api/logincli', data);
+                console.log('data :>> ', data);
     
-                if (response.data.token) {
-                    await AsyncStorage.setItem('userToken', response.data.token);
+                // Envoi de la requête à l'API
+                const response = await axios.post('https://1a26-41-79-219-8.ngrok-free.app/api/logincli', data);
+                console.log('API Response:', response.data);
+    
+                if (response.data.client_id && response.data.token) {
+                    // Stocker le clientId en tant que chaîne de caractères
                     await AsyncStorage.setItem('clientId', response.data.client_id.toString());
-    
-                    console.log('Connexion réussie');
-                    await router.replace("/home");
+                
+                    // Stocker le token
+                    await AsyncStorage.setItem('userToken', response.data.token);
+                
+                    // Naviguer après une connexion réussie
+                    router.replace("/home");
                 } else {
-                    Alert.alert('Erreur', 'Token non trouvé');
+                    if (!response.data.client_id) {
+                        console.log('client_id not found in response');
+                    }
+                    if (!response.data.token) {
+                        Alert.alert('Erreur', 'Token non trouvé');
+                    }
                 }
+                
+                
             }
         } catch (error) {
-            console.error('Erreur :>> ', error.response ? error.response.data : error.message);
-            Alert.alert('Erreur', error.response?.data?.message || 'Identifiants incorrects ou problème avec le serveur');
+            console.log('error :>> ', error);
         } finally {
             setLoading(false);
         }
     };
+  
     
+    
+
     return (
         <View style={styles.container}>
             <Image
@@ -145,6 +160,9 @@ export default function Signin() {
                     <Text style={styles.loginButtonText}>Se connecter</Text>
                 }
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                      <Text style={styles.linkText}>Avez-vous déjà un compte ?</Text>
+                    </TouchableOpacity>
             <Text style={styles.orText}>Ou continuer avec </Text>
             <View style={styles.socialButtonsContainer}>
                 <TouchableOpacity style={styles.socialButton}>
@@ -162,9 +180,6 @@ export default function Signin() {
                     <Text style={styles.socialButtonText}>Google</Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-                <Text style={styles.linkText}>Créer un compte</Text>
-            </TouchableOpacity>
             <TouchableOpacity>
                 <Text style={styles.linkText}>Mot de passe oublié</Text>
             </TouchableOpacity>
@@ -276,7 +291,7 @@ const styles = StyleSheet.create({
     },
     linkText: {
         fontFamily: "AbhayaLibreExtraBold",
-        color: '#008000',
+        color: Colors.vert,
         textDecorationLine: 'underline',
         marginTop: 10,
         fontSize: 14,

@@ -117,23 +117,23 @@ export default function SignUp() {
       };
   
       const response = await axios.post(
-        'https://c63c-197-234-219-41.ngrok-free.app/api/registercli',
+        'https://c112-41-79-219-65.ngrok-free.app/api/registercli',
         data
       );
   
-      if (response.data && response.data.client_id) {
-        // Stocker l'ID client dans AsyncStorage
-        await AsyncStorage.setItem('clientId', response.data.client_id.toString());
-  
-        // Vérifier que l'ID est bien stocké
-        const storedClientId = await AsyncStorage.getItem('clientId');
-        console.log('ID client stocké:', storedClientId);
-  
-        // Redirection vers la page de localisation
-        router.replace('/auth/location');
+      if (response.data) {
+        const clientId = response.data.client_id || response.data.id;
+        
+        if (clientId) {
+          await AsyncStorage.setItem('clientId', clientId.toString());
+          console.log('ID client stocké:', clientId);
+          router.replace('/auth/location');
+        } else {
+          Alert.alert('Erreur', 'ID client non trouvé');
+        }
       } else {
-        Alert.alert('Erreur', 'ID client non trouvé');
-      }
+        Alert.alert('Erreur', 'Réponse de l\'API invalide');
+      }      
     } catch (error) {
       console.error('Erreur :', error.response?.data || error.message);
       Alert.alert('Erreur', 'Problème avec l\'inscription. Veuillez réessayer.');

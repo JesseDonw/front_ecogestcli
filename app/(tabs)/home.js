@@ -14,7 +14,6 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container}>
         <ProfilCard
           welText="Bienvenue!"
-          userName='jesse DONWAHOUE'
         />
        
       <ScrollView contentContainerStyle= {styles.ScrollViews} showsVerticalScrollIndicator = {false} >
