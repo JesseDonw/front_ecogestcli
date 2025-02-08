@@ -116,7 +116,7 @@ export default function Modif() {
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-        {['nom', 'prenom', 'email', 'bio'].map((field) => (
+        {['nom', 'prenom', 'email',].map((field) => (
           <View style={styles.inputWrapper} key={field}>
             <TextInput
               placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)}`}

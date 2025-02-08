@@ -95,7 +95,7 @@ export default function SetLocation() {
     try {
       setLoading(true);
   
-      const response = await fetch('https://c112-41-79-219-65.ngrok-free.app/api/storelocation', {
+      const response = await fetch('https://2809-41-79-219-8.ngrok-free.app/api/storelocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
