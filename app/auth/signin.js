@@ -82,7 +82,7 @@ export default function Signin() {
                 console.log('data :>> ', data);
     
                 // Envoi de la requête à l'API
-                const response = await axios.post('https://2809-41-79-219-8.ngrok-free.app/api/logincli', data);
+                const response = await axios.post('https://ef6d-137-255-27-6.ngrok-free.app/api/logincli', data);
                 console.log('API Response:', response.data);
     
                 if (response.data.client_id && response.data.token) {
@@ -161,7 +161,7 @@ export default function Signin() {
                 }
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/auth/signup')}>
-                      <Text style={styles.linkText}>Avez-vous déjà un compte ?</Text>
+                      <Text style={styles.linkText}>Créer un compte </Text>
                     </TouchableOpacity>
             <Text style={styles.orText}>Ou continuer avec </Text>
             <View style={styles.socialButtonsContainer}>

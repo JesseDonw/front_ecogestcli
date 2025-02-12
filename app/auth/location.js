@@ -15,13 +15,14 @@ import * as Location from 'expo-location';
 import mapsIcon from '../../assets/maps.png';
 import { Colors } from '../../constants/Colors';
 
+const GOOGLE_MAPS_API_KEY = "AIzaSyBTTAnxDhoifYOBsxW_C7ZyfmpU8LJMbT4";
+
 export default function SetLocation() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState('');
   const [coordinates, setCoordinates] = useState(null);
   const [clientId, setClientId] = useState(null);
- 
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -29,91 +30,134 @@ export default function SetLocation() {
         const storedClientId = await AsyncStorage.getItem('clientId');
         if (storedClientId) {
           setClientId(parseInt(storedClientId, 10));
-          console.log('ID client récupéré:', storedClientId);
+          console.log('✅ ID client récupéré:', storedClientId);
         } else {
-          console.warn("Client ID non trouvé dans le stockage.");
+          console.warn("⚠️ Client ID non trouvé dans le stockage.");
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération du client ID :", error);
+        console.error("❌ Erreur lors de la récupération du client ID :", error);
       }
     };
 
     fetchClientId();
   }, []);
 
+  // 📍 Fonction pour récupérer la localisation avec précision
   const handleSetLocation = async () => {
     try {
       setLoading(true);
-  
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission refusée',
-          'Nous avons besoin de votre permission pour accéder à la localisation',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Permission refusée', 'Nous avons besoin de votre permission pour accéder à la localisation');
         setLoading(false);
         return;
       }
-  
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      let geocode = await Location.reverseGeocodeAsync({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+
+      const { coords } = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
       });
-  
-      if (geocode.length > 0) {
-        const city = geocode[0].city || geocode[0].region || 'Ville inconnue';
-        const country = geocode[0].country || 'Pays inconnu';
-        const address = `${city}, ${country}`; // ✅ Stocke seulement "Ville, Pays"
-  
-        setLocation(address);
-        setCoordinates({
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
-        });
-  
-        console.log(`📍 Localisation détectée : ${address}`);
-      } else {
-        Alert.alert('Erreur', "Impossible de récupérer la localisation.");
-      }
+
+      const { latitude, longitude } = coords;
+      setCoordinates({ latitude, longitude });
+
+      await fetchLocationData(latitude, longitude);
     } catch (error) {
+      console.error('❌ Erreur de localisation:', error);
       Alert.alert('Erreur', "Impossible d'obtenir votre localisation.");
-      console.error('Erreur de localisation:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // 🔍 Fonction pour récupérer les détails de localisation via Google Maps et OpenStreetMap
+  const fetchLocationData = async (latitude, longitude) => {
+    try {
+      console.log(`📡 Récupération des données pour lat:${latitude}, lon:${longitude}`);
   
+      // 🔍 Google Maps API
+      const googleResponse = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      const googleText = await googleResponse.text(); // 🔍 Lire la réponse en texte brut
+      console.log("📡 Réponse brute Google:", googleText); // Afficher la réponse brute
   
+      let googleData;
+      try {
+        googleData = JSON.parse(googleText);
+        if (!googleData || googleData.status !== 'OK') {
+          throw new Error("❌ Erreur avec Google Maps API");
+        }
+      } catch (error) {
+        console.error("❌ Erreur de parsing JSON Google:", error);
+        throw new Error("Erreur avec l'API Google Maps (JSON invalide)");
+      }
+  
+      // 🔍 OpenStreetMap API
+      const osmResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`, {
+        headers: { 'User-Agent': 'ReactNativeApp' }
+      });
+      const osmData = await osmResponse.json();
+  
+      if (!osmData || !osmData.address) {
+        throw new Error("Erreur avec OpenStreetMap API");
+      }
+  
+      // 📝 Extraction des données Google Maps
+      const googleAddressComponents = googleData.results[0]?.address_components || [];
+      const quartierGoogle = googleAddressComponents.find(comp => comp.types.includes('sublocality') || comp.types.includes('neighborhood'))?.long_name || '';
+      const villeGoogle = googleAddressComponents.find(comp => comp.types.includes('locality'))?.long_name || '';
+      const paysGoogle = googleAddressComponents.find(comp => comp.types.includes('country'))?.long_name || '';
+  
+      // 📝 Extraction des données OpenStreetMap
+      const quartierOSM = osmData.address?.neighbourhood || osmData.address?.suburb || '';
+      const villeOSM = osmData.address?.city || osmData.address?.town || '';
+      const paysOSM = osmData.address?.country || '';
+  
+      // 🔄 Fusion des résultats pour la précision maximale
+      const finalQuartier = quartierGoogle || quartierOSM || 'Quartier inconnu';
+      const finalVille = villeGoogle || villeOSM || 'Ville inconnue';
+      const finalPays = paysGoogle || paysOSM || 'Pays inconnu';
+  
+      // 📍 Combinaison finale de l'adresse
+      const fullLocation = `${finalQuartier}, ${finalVille}, ${finalPays}`;
+      setLocation(fullLocation);
+  
+      console.log(`📍 Localisation ultra-précise : ${fullLocation}`);
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération des données de localisation:', error);
+      Alert.alert("Erreur", error.message);
+    }
+  };
+  
+
+  // 🗖️ Enregistrement de la localisation
   const handleSaveLocation = async () => {
     if (!coordinates || !clientId) {
       Alert.alert('Erreur', 'Aucune localisation disponible ou client ID non trouvé');
       return;
     }
-  
+
     try {
       setLoading(true);
-  
-      const response = await fetch('https://2809-41-79-219-8.ngrok-free.app/api/storelocation', {
+      const response = await fetch('https://ef6d-137-255-27-6.ngrok-free.app/api/storelocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          location: location, // ✅ Ex: "Cotonou, Bénin"
+          location: location,
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           client_id: clientId,
         }),
       });
-  
+      
       const data = await response.json();
-  
+
       if (response.ok) {
         console.log(data);
-        router.push('/auth/check'); // ✅ Redirection après succès
+        router.push('/auth/check');
       } else {
         Alert.alert('Erreur', data.message || 'Une erreur est survenue');
       }
@@ -124,9 +168,7 @@ export default function SetLocation() {
       setLoading(false);
     }
   };
-  
-  
-  
+
   return (
     <View style={styles.container}>
       {/* Bouton de retour */}
@@ -148,31 +190,14 @@ export default function SetLocation() {
         </View>
 
         {/* Bouton pour définir la localisation */}
-        <TouchableOpacity
-          style={styles.setLocationButton}
-          onPress={handleSetLocation}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={Colors.vert} />
-          ) : (
-            <Text style={styles.setLocationText}>Définissez votre localisation</Text>
-          )}
+        <TouchableOpacity style={styles.setLocationButton} onPress={handleSetLocation} disabled={loading}>
+          {loading ? <ActivityIndicator color={Colors.vert} /> : <Text style={styles.setLocationText}>Définissez votre localisation</Text>}
         </TouchableOpacity>
       </View>
 
-    
       {/* Bouton Enregistrer */}
-      <TouchableOpacity
-        style={[styles.nextButton, (!location || loading) && styles.nextButtonDisabled]}
-        onPress={handleSaveLocation}
-        disabled={!location || loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.nextButtonText}>Enregistrer</Text>
-        )}
+      <TouchableOpacity style={[styles.nextButton, (!location || loading) && styles.nextButtonDisabled]} onPress={handleSaveLocation} disabled={!location || loading}>
+        {loading ? <ActivityIndicator color="white" /> : <Text style={styles.nextButtonText}>Enregistrer</Text>}
       </TouchableOpacity>
     </View>
   );
