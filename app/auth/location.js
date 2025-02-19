@@ -139,7 +139,7 @@ export default function SetLocation() {
 
     try {
       setLoading(true);
-      const response = await fetch('https://ef6d-137-255-27-6.ngrok-free.app/api/storelocation', {
+      const response = await fetch('https://ecogest-e4b9c843b0a7.herokuapp.com/api/storelocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,9 +178,7 @@ export default function SetLocation() {
 
       {/* Titre et description */}
       <Text style={styles.title}>Définissez votre localisation</Text>
-      <Text style={styles.subtitle}>
-        Ces données seront affichées dans le profil de votre compte pour des raisons de sécurité
-      </Text>
+      
 
       {/* Affichage de la localisation */}
       <View style={[styles.locationBox, styles.shadow]}>
@@ -228,7 +226,7 @@ const styles = StyleSheet.create({
   locationBox: {
     backgroundColor: '#fff',
     borderRadius: 15,
-    padding: 20,
+    padding: 10,
     marginBottom: 20,
   },
   locationRow: {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-const API_URL = 'https://ef6d-137-255-27-6.ngrok-free.app/api';
+const API_URL = 'https://ecogest-e4b9c843b0a7.herokuapp.com/api';
 const ADMIN_ID = 1;  
 const ADMIN_TYPE = 'App\\Models\\Administrateur';
 const CLIENT_TYPE = 'App\\Models\\Client';
@@ -12,6 +12,10 @@ export const sendMessageToAPI = async (clientId, content) => {
   try {
     const token = await AsyncStorage.getItem('userToken');
     if (!token) throw new Error('Token non trouvé dans AsyncStorage');
+
+
+    console.log("Token récupéré :", token);
+
 
     const response = await axios.post(`${API_URL}/send-message`, {
       sender_id: clientId,
@@ -24,6 +28,14 @@ export const sendMessageToAPI = async (clientId, content) => {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json',
       },
+
+      
+    });
+
+
+    console.log("Envoi du message avec headers :", {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
     });
 
     console.log("Message envoyé avec succès:", response.data);
