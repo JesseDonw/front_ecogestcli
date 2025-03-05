@@ -12,14 +12,15 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-        <ProfilCard
+       <ProfilCard
           welText="Bienvenue!"
+          name='Client'
+          prenom='cli'
+          email='client@gmail.com'
+          image="https://ui-avatars.com/api/?name=C&background=0D8AC&color=fff&size=80"
         />
        
-      <ScrollView contentContainerStyle= {styles.ScrollViews} showsVerticalScrollIndicator = {false} >
-        {/* Header Section */}
-      
-
+     
         {/* Search Bar */}
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#888" />
@@ -28,6 +29,10 @@ const HomeScreen = () => {
             <Ionicons name="notifications" size={24} color="#000" />
           </TouchableOpacity>
         </View>
+        <ScrollView contentContainerStyle= {styles.ScrollViews} showsVerticalScrollIndicator = {false} >
+        {/* Header Section */}
+      
+
 
         {/* Banner Section */}
         <View style={styles.bannerContainer}>
