@@ -117,7 +117,7 @@ export default function SignUp() {
       };
   
       const response = await axios.post(
-        'https://ecogest-e4b9c843b0a7.herokuapp.com/api/registercli',
+        'https://ecogest1-69586dbc1b71.herokuapp.com/api/registercli',
         data
       );
   

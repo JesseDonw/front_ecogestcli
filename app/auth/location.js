@@ -139,7 +139,7 @@ export default function SetLocation() {
 
     try {
       setLoading(true);
-      const response = await fetch('https://ecogest-e4b9c843b0a7.herokuapp.com/api/storelocation', {
+      const response = await fetch('https://ecogest1-69586dbc1b71.herokuapp.com/api/storelocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
