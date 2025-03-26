@@ -14,6 +14,10 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container}>
         <ProfilCard
           welText="Bienvenue!"
+          name='SAH'
+          prenom=' SAH Valerie'
+          email='valerie@gmail.com'
+          image="https://ui-avatars.com/api/?name=AG&background=0D8ABC&color=fff&size=80"
         />
        
       <ScrollView contentContainerStyle= {styles.ScrollViews} showsVerticalScrollIndicator = {false} >

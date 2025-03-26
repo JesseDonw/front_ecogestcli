@@ -52,15 +52,21 @@ export default function SetLocation() {
         setLoading(false);
         return;
       }
-
+  
+      // Demande de localisation avec la meilleure précision possible
       const { coords } = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
+        accuracy: Location.Accuracy.High,  // Utilisation d'une précision plus fine
       });
-
+  
+      // Vérification de la précision, si elle est insuffisante (par exemple, supérieure à 10m)
+      if (coords.accuracy > 10) {
+        console.log('Précision approximative (supérieure à 10m). La localisation continue malgré tout.');
+      }
+  
       const { latitude, longitude } = coords;
       setCoordinates({ latitude, longitude });
-
       await fetchLocationData(latitude, longitude);
+  
     } catch (error) {
       console.error('❌ Erreur de localisation:', error);
       Alert.alert('Erreur', "Impossible d'obtenir votre localisation.");
@@ -68,60 +74,44 @@ export default function SetLocation() {
       setLoading(false);
     }
   };
+  
+  
+  
 
   // 🔍 Fonction pour récupérer les détails de localisation via Google Maps et OpenStreetMap
   const fetchLocationData = async (latitude, longitude) => {
     try {
       console.log(`📡 Récupération des données pour lat:${latitude}, lon:${longitude}`);
-  
-      // 🔍 Google Maps API
+    
       const googleResponse = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
       );
-      const googleText = await googleResponse.text(); // 🔍 Lire la réponse en texte brut
-      console.log("📡 Réponse brute Google:", googleText); // Afficher la réponse brute
-  
-      let googleData;
-      try {
-        googleData = JSON.parse(googleText);
-        if (!googleData || googleData.status !== 'OK') {
-          throw new Error("❌ Erreur avec Google Maps API");
-        }
-      } catch (error) {
-        console.error("❌ Erreur de parsing JSON Google:", error);
-        throw new Error("Erreur avec l'API Google Maps (JSON invalide)");
-      }
-  
-      // 🔍 OpenStreetMap API
+      const googleData = await googleResponse.json();
+    
       const osmResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`, {
         headers: { 'User-Agent': 'ReactNativeApp' }
       });
       const osmData = await osmResponse.json();
-  
+    
       if (!osmData || !osmData.address) {
         throw new Error("Erreur avec OpenStreetMap API");
       }
-  
-      // 📝 Extraction des données Google Maps
-      const googleAddressComponents = googleData.results[0]?.address_components || [];
-      const quartierGoogle = googleAddressComponents.find(comp => comp.types.includes('sublocality') || comp.types.includes('neighborhood'))?.long_name || '';
-      const villeGoogle = googleAddressComponents.find(comp => comp.types.includes('locality'))?.long_name || '';
-      const paysGoogle = googleAddressComponents.find(comp => comp.types.includes('country'))?.long_name || '';
-  
-      // 📝 Extraction des données OpenStreetMap
-      const quartierOSM = osmData.address?.neighbourhood || osmData.address?.suburb || '';
-      const villeOSM = osmData.address?.city || osmData.address?.town || '';
+    
+      const quartierGoogle = googleData.results[0]?.address_components.find(comp => comp.types.includes('sublocality'))?.long_name || '';
+      const quartierOSM = osmData.address?.neighbourhood || osmData.address?.suburb || 'Quartier inconnu';
+      const finalQuartier = quartierGoogle || quartierOSM;
+    
+      const villeGoogle = googleData.results[0]?.address_components.find(comp => comp.types.includes('locality'))?.long_name || '';
+      const villeOSM = osmData.address?.city || osmData.address?.town || 'Ville inconnue';
+      const finalVille = villeGoogle || villeOSM;
+    
+      const paysGoogle = googleData.results[0]?.address_components.find(comp => comp.types.includes('country'))?.long_name || '';
       const paysOSM = osmData.address?.country || '';
-  
-      // 🔄 Fusion des résultats pour la précision maximale
-      const finalQuartier = quartierGoogle || quartierOSM || 'Quartier inconnu';
-      const finalVille = villeGoogle || villeOSM || 'Ville inconnue';
       const finalPays = paysGoogle || paysOSM || 'Pays inconnu';
-  
-      // 📍 Combinaison finale de l'adresse
+    
       const fullLocation = `${finalQuartier}, ${finalVille}, ${finalPays}`;
       setLocation(fullLocation);
-  
+    
       console.log(`📍 Localisation ultra-précise : ${fullLocation}`);
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des données de localisation:', error);
